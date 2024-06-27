@@ -7,7 +7,8 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #121212;
+            color: #ffffff;
             padding: 20px;
         }
 
@@ -21,6 +22,9 @@
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            color: #ffffff;
         }
 
         #posts {
@@ -28,14 +32,26 @@
         }
 
         .post {
-            background-color: white;
+            background-color: #1e1e1e;
             padding: 10px;
             margin-bottom: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
 
         .post img {
             max-width: 100%;
+        }
+
+        button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3700b3;
         }
     </style>
 </head>
@@ -50,6 +66,34 @@
     <div id="posts"></div>
 
     <script>
+        // Function to save posts to localStorage
+        function savePosts(posts) {
+            localStorage.setItem('posts', JSON.stringify(posts));
+        }
+
+        // Function to load posts from localStorage
+        function loadPosts() {
+            const savedPosts = localStorage.getItem('posts');
+            if (savedPosts) {
+                return JSON.parse(savedPosts);
+            }
+            return [];
+        }
+
+        // Function to display posts on the page
+        function displayPost(post) {
+            const postsDiv = document.getElementById('posts');
+            const postDiv = document.createElement('div');
+            postDiv.className = 'post';
+            postDiv.innerHTML = `
+                <p><strong>${post.username}</strong></p>
+                <p>${post.postText}</p>
+                <img src="${post.imagePath}" alt="Posted image">
+            `;
+            postsDiv.prepend(postDiv);
+        }
+
+        // Function to handle post submission
         function submitPost() {
             const username = document.getElementById('username').value;
             const postText = document.getElementById('postText').value;
@@ -62,17 +106,25 @@
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                const postsDiv = document.getElementById('posts');
-                const postDiv = document.createElement('div');
-                postDiv.className = 'post';
-                postDiv.innerHTML = `
-                    <p><strong>${username}</strong></p>
-                    <p>${postText}</p>
-                    <img src="${event.target.result}" alt="Posted image">
-                `;
-                postsDiv.prepend(postDiv);
+                const post = {
+                    username: username,
+                    postText: postText,
+                    imagePath: event.target.result
+                };
+
+                const posts = loadPosts();
+                posts.push(post);
+                savePosts(posts);
+
+                displayPost(post);
             }
             reader.readAsDataURL(imageInput);
+        }
+
+        // Load and display posts on page load
+        window.onload = function() {
+            const posts = loadPosts();
+            posts.forEach(displayPost);
         }
     </script>
 </body>
