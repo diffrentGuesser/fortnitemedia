@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Text Post</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        #postForm {
+            margin-bottom: 20px;
+        }
+
+        #postForm input, #postForm textarea {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #posts {
+            margin-top: 20px;
+        }
+
+        .post {
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .post img {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Post Images and Text</h1>
+    <div id="postForm">
+        <input type="text" id="username" placeholder="Enter your name">
+        <textarea id="postText" placeholder="Enter your text"></textarea>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="submitPost()">Post</button>
+    </div>
+    <div id="posts"></div>
+
+    <script>
+        function submitPost() {
+            const username = document.getElementById('username').value;
+            const postText = document.getElementById('postText').value;
+            const imageInput = document.getElementById('imageInput').files[0];
+
+            if (!username || !postText || !imageInput) {
+                alert('All fields are required!');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const postsDiv = document.getElementById('posts');
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post';
+                postDiv.innerHTML = `
+                    <p><strong>${username}</strong></p>
+                    <p>${postText}</p>
+                    <img src="${event.target.result}" alt="Posted image">
+                `;
+                postsDiv.prepend(postDiv);
+            }
+            reader.readAsDataURL(imageInput);
+        }
+    </script>
+</body>
+</html>
