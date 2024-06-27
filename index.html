@@ -65,22 +65,75 @@
     </div>
     <div id="posts"></div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+
     <script>
-        // Function to save posts to localStorage
-        function savePosts(posts) {
-            localStorage.setItem('posts', JSON.stringify(posts));
+        // Your Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDIp4Tu5DjRkvia4AMaq8X7K9N6I0E5vOU",
+          authDomain: "fortnite-media.firebaseapp.com",
+          projectId: "fortnite-media",
+          storageBucket: "fortnite-media.appspot.com",
+          messagingSenderId: "796013038122",
+          appId: "1:796013038122:web:6a5d0c90a6224f935ed153",
+          measurementId: "G-SZ6QMY1YWJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Function to fetch posts
+        async function fetchPosts() {
+            const postsDiv = document.getElementById('posts');
+            const snapshot = await db.collection('posts').get();
+            snapshot.forEach(doc => {
+                displayPost(doc.data());
+            });
         }
 
-        // Function to load posts from localStorage
-        function loadPosts() {
-            const savedPosts = localStorage.getItem('posts');
-            if (savedPosts) {
-                return JSON.parse(savedPosts);
+        // Function to submit a post
+        function submitPost() {
+            const username = document.getElementById('username').value;
+            const postText = document.getElementById('postText').value;
+            const imageInput = document.getElementById('imageInput').files[0];
+
+            if (!username || !postText || !imageInput) {
+                alert('All fields are required!');
+                return;
             }
-            return [];
+
+            const storageRef = storage.ref('images/' + imageInput.name);
+            const uploadTask = storageRef.put(imageInput);
+
+            uploadTask.on('state_changed', 
+                (snapshot) => {}, 
+                (error) => {
+                    console.error('Upload failed:', error);
+                }, 
+                () => {
+                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        const post = {
+                            username: username,
+                            postText: postText,
+                            imagePath: downloadURL
+                        };
+
+                        db.collection('posts').add(post).then(() => {
+                            displayPost(post);
+                        }).catch((error) => {
+                            console.error('Error adding post:', error);
+                        });
+                    });
+                }
+            );
         }
 
-        // Function to display posts on the page
+        // Function to display a post
         function displayPost(post) {
             const postsDiv = document.getElementById('posts');
             const postDiv = document.createElement('div');
@@ -93,39 +146,8 @@
             postsDiv.prepend(postDiv);
         }
 
-        // Function to handle post submission
-        function submitPost() {
-            const username = document.getElementById('username').value;
-            const postText = document.getElementById('postText').value;
-            const imageInput = document.getElementById('imageInput').files[0];
-
-            if (!username || !postText || !imageInput) {
-                alert('All fields are required!');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const post = {
-                    username: username,
-                    postText: postText,
-                    imagePath: event.target.result
-                };
-
-                const posts = loadPosts();
-                posts.push(post);
-                savePosts(posts);
-
-                displayPost(post);
-            }
-            reader.readAsDataURL(imageInput);
-        }
-
-        // Load and display posts on page load
-        window.onload = function() {
-            const posts = loadPosts();
-            posts.forEach(displayPost);
-        }
+        // Load posts on page load
+        window.onload = fetchPosts;
     </script>
 </body>
 </html>
